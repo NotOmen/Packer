@@ -1,0 +1,5 @@
+{
+    "DirectoryPath": "",
+    "Mode": "",
+    "OverWriteExisting": false
+}
