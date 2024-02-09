@@ -6,7 +6,7 @@
     !fs.existsSync(path.join(__dirname, "Configuration.txt")) ||
     !fs.lstatSync(path.join(__dirname, "Configuration.txt")).isFile()
   )
-    return console.log(`[⛔] File Configuration.txt does not exist.`);
+    return console.log(`⛔ File Configuration.txt does not exist.`);
 
   let config;
   try {
@@ -18,7 +18,7 @@
     );
   } catch (_) {
     console.log(
-      "[⛔] Structure for file Configuration.txt has been edited and cannot be parsed."
+      "⛔ Structure for file Configuration.txt has been edited and cannot be parsed."
     );
   }
   if (!config) return;
@@ -26,29 +26,29 @@
   const { DirectoryPath, Mode, OverWriteExisting } = config;
 
   if (!DirectoryPath)
-    return console.log("[⚠️] DirectoryPath has not been provided.");
-  if (!Mode) return console.log("[⚠️] Mode has not been provided.");
+    return console.log("⚠️  DirectoryPath has not been provided.");
+  if (!Mode) return console.log("⚠️  Mode has not been provided.");
 
   if (!["Packing", "Unpacking"].includes(Mode))
     return console.log(
-      `[⚠️] "Mode" can only be set to "Packing" or "Unpacking"`
+      `⚠️  "Mode" can only be set to "Packing" or "Unpacking"`
     );
 
   const startingTime = new Date();
 
-  console.log(`[▶️] Starting ${Mode}..`);
+  console.log(`▶️  Starting ${Mode}..`);
 
   if (Mode === "Packing") {
     if (!fs.existsSync(path.join(DirectoryPath)))
       return console.log(
-        `[⚠️] Could not find directory with path: ${path.join(DirectoryPath)}`
+        `⚠️  Could not find directory with path: ${path.join(DirectoryPath)}`
       );
     if (!fs.lstatSync(path.join(DirectoryPath)).isDirectory())
       return console.log(
-        `[⚠️] Item at path "${path.join(DirectoryPath)}" is not a directory.`
+        `⚠️  Item at path "${path.join(DirectoryPath)}" is not a directory.`
       );
 
-    const dirTree = [[], []];
+    const dirTree = [path.sep, [], []];
     await pack(path.join(DirectoryPath));
     async function pack(itemPath) {
       return new Promise(async (resolve) => {
@@ -56,7 +56,7 @@
         if (pathStats.isDirectory()) {
           const baseName = itemPath.replace(path.join(DirectoryPath), "");
           if (baseName !== "") {
-            dirTree[0].push(baseName);
+            dirTree[1].push(baseName);
           }
           for (const item of fs.readdirSync(itemPath))
             await pack(path.join(`${itemPath}/${item}`));
@@ -64,7 +64,7 @@
         if (pathStats.isFile()) {
           const relativePath = itemPath.replace(path.join(DirectoryPath), "");
           const fileContents = fs.readFileSync(itemPath);
-          dirTree[1].push(
+          dirTree[2].push(
             JSON.parse(
               `{ ${JSON.stringify(relativePath)}: "${encodeURIComponent(
                 fileContents
@@ -80,7 +80,7 @@
       `${JSON.stringify(dirTree)}`
     );
     console.log(
-      `[📦] Directory successfully packed to "Packet.json" located at path: ${path.join(
+      `📦 Directory successfully packed to "Packet.json" located at path: ${path.join(
         __dirname,
         "Packet.json"
       )}`
@@ -93,25 +93,26 @@
       !fs.lstatSync(path.join(__dirname, "Packet.json")).isFile()
     )
       return console.log(
-        `[🗃️❌] Packet does not exist!\nMake sure there is a Packet.json file at path: ${__dirname}`
+        `🗃️ ❌ Packet does not exist!\nMake sure there is a Packet.json file at path: ${__dirname}`
       );
 
     let packet;
     try {
       packet = require(path.join(__dirname, "Packet.json"));
     } catch (_) {
-      console.log(`[⛔] Packet is corrupted..`);
+      console.log(`⛔ Packet is corrupted..`);
     }
     if (!packet) return;
 
     if (!fs.existsSync(path.join(DirectoryPath)))
       fs.mkdirSync(path.join(DirectoryPath));
 
-    for (const directory of packet[0]) {
+    for (let directory of packet[1]) {
+      directory = directory.replaceAll(packet[0], path.sep);
       const exists = fs.existsSync(path.join(`${DirectoryPath}/${directory}`));
       if (!OverWriteExisting && exists) {
         console.log(
-          `[📁] Directory "..${directory}" already exists, skipping.`
+          `📁 Directory "..${directory}" already exists, skipping.`
         );
         continue;
       }
@@ -119,40 +120,41 @@
       fs.mkdirSync(path.join(`${DirectoryPath}/${directory}`));
     }
     console.log(
-      `[🗂️] Successfully unpacked all directories!\n[🕒] Time Elapsed: ${
+      `🗂️  Successfully unpacked all directories!\n🕒 Time Elapsed: ${
         (Date.now() - startingTime) / 1000
       }s`
     );
 
-    for (const fileData of packet[1]) {
+    for (const fileData of packet[2]) {
+      const fileName = Object.keys(fileData)[0].replaceAll(packet[0], path.sep);
       const exists = fs.existsSync(
-        path.join(`${DirectoryPath}/${Object.keys(fileData)}`)
+        path.join(`${DirectoryPath}${fileName}`)
       );
       if (!OverWriteExisting && exists) {
         console.log(
-          `[📄] File "..${Object.keys(fileData)}" already exists, skipping.`
+          `📄 File "..${fileName}" already exists, skipping.`
         );
       }
       if (exists)
-        fs.unlinkSync(path.join(`${DirectoryPath}/${Object.keys(fileData)}`));
+        fs.unlinkSync(path.join(`${DirectoryPath}${fileName}`));
       fs.writeFileSync(
-        path.join(`${DirectoryPath}/${Object.keys(fileData)}`),
+        path.join(`${DirectoryPath}${fileName}`),
         decodeURIComponent(Object.values(fileData))
       );
     }
     console.log(
-      `[📝] Successfully unpacked all files!\n[🕒] Time Elapsed: ${
+      `📝 Successfully unpacked all files!\n🕒 Time Elapsed: ${
         (Date.now() - startingTime) / 1000
       }s`
     );
     console.log(
-      `[📤] Successfully unpacked all contents to: ${path.join(
+      `📤 Successfully unpacked all contents to: ${path.join(
         `${DirectoryPath}`
       )}`
     );
   }
 
   console.log(
-    `[⏱️] Total time elapsed: ${(Date.now() - startingTime) / 1000}s`
+    `⏱️  Total time elapsed: ${(Date.now() - startingTime) / 1000}s`
   );
 })();
