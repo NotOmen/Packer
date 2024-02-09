@@ -26,5 +26,22 @@ Incase of any errors, kindly follow the instructions provided by them.
 - To start unpacking head back over to the `Configuration.txt` file and change the `Mode` from `Packing` to `Unpacking` as done before.
 - If you want the program to overwrite existing data (Files and Directories) then set change `false` written in-front of `OverWriteExisting` to `true`.
 
+The file should now be looking something like below:
+```json
+{
+    "DirectoryPath": "C:/DataFolder/UsersData",
+    "Mode": "Unpacking",
+    "OverWriteExisting": false
+}
+```
+*OR*
+```json
+{
+    "DirectoryPath": "C:/DataFolder/UsersData",
+    "Mode": "Packing",
+    "OverWriteExisting": true
+}
+```
+
 Now just as before run the `Packer.js` file and everything should be unpacked to the provided path.
 Enjoy!
